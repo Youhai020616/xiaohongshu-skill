@@ -313,5 +313,5 @@ Issues and PRs welcome! Areas where help is needed:
 ---
 
 <p align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/Youhai020616">PocketAI</a></sub>
+  <sub>Built with ❤️ by <a href="https://github.com/Youhai020616">Youhai</a></sub>
 </p>

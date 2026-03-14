@@ -133,5 +133,5 @@ python scripts/cdp_publish.py search-feeds --keyword "AI创业" --sort-by 最新
 ---
 
 <p align="center">
-  <sub>由 <a href="https://github.com/Youhai020616">PocketAI</a> 用 ❤️ 构建</sub>
+  <sub>由 <a href="https://github.com/Youhai020616">Youhai</a> 用 ❤️ 构建</sub>
 </p>
