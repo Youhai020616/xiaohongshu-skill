@@ -50,18 +50,17 @@ def _detect_mcp_binary() -> str:
     else:
         arch_name = arch
 
-    # 尝试查找二进制
+    # 尝试查找当前平台的二进制（不 fallback 到其他平台）
     mcp_dir = os.path.join(_PROJECT_ROOT, "mcp")
     candidates = [
         f"xiaohongshu-mcp-{os_name}-{arch_name}",
         f"xiaohongshu-mcp-{os_name}-{arch_name}.exe",
-        "xiaohongshu-mcp-darwin-arm64",  # fallback
     ]
     for name in candidates:
         path = os.path.join(mcp_dir, name)
         if os.path.isfile(path):
             return path
-    # 返回最可能的路径（即使不存在）
+    # 返回预期路径（不存在时 is_running/start_server 会报错）
     return os.path.join(mcp_dir, candidates[0])
 
 
@@ -77,7 +76,6 @@ def _detect_login_binary() -> str:
     candidates = [
         f"xiaohongshu-login-{os_name}-{arch_name}",
         f"xiaohongshu-login-{os_name}-{arch_name}.exe",
-        "xiaohongshu-login-darwin-arm64",
     ]
     for name in candidates:
         path = os.path.join(mcp_dir, name)

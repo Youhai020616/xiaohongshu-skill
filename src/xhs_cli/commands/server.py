@@ -3,6 +3,8 @@ xhs server — MCP 服务管理命令。
 """
 from __future__ import annotations
 
+import os
+
 import click
 
 from xhs_cli.engines.mcp_client import MCPClient, MCPError, MCP_BINARY, MCP_LOG_FILE
@@ -24,6 +26,11 @@ def start(port, proxy, no_proxy):
     cfg = config.load_config()
     port = port or cfg["mcp"]["port"]
     proxy_addr = None if no_proxy else (proxy or cfg["mcp"]["proxy"])
+
+    if not os.path.isfile(MCP_BINARY):
+        error(f"MCP 二进制不可用: {os.path.basename(MCP_BINARY)}")
+        info("当前平台暂无 MCP 二进制，请使用 CDP 模式: xhs login --cdp")
+        raise SystemExit(1)
 
     if MCPClient.is_running(port=port):
         pid = MCPClient.get_server_pid()

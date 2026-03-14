@@ -122,7 +122,11 @@ echo -e "  ${CYAN}# 方式一: 直接初始化 (推荐)${NC}"
 echo -e "  source activate.sh && xhs init"
 echo ""
 echo -e "  ${CYAN}# 方式二: 手动激活环境后使用${NC}"
+if [ -f "$VENV_DIR/Scripts/activate" ]; then
+echo -e "  source .venv/Scripts/activate"
+else
 echo -e "  source .venv/bin/activate"
+fi
 echo -e "  xhs init"
 echo ""
 echo -e "  ${CYAN}# 以后每次使用前激活环境:${NC}"
