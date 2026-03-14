@@ -1,0 +1,16 @@
+# Runtime & sensitive
+mcp/cookies.json
+mcp/cookies.json.bak
+mcp/mcp.log
+tmp/
+scripts/__pycache__/
+*.pyc
+login_status_cache.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
