@@ -3,9 +3,19 @@ mcp/cookies.json
 mcp/cookies.json.bak
 mcp/mcp.log
 tmp/
-scripts/__pycache__/
-*.pyc
+config/accounts.json
 login_status_cache.json
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Config
+~/.xhs/
 
 # OS
 .DS_Store

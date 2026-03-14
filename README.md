@@ -1,9 +1,10 @@
 <p align="center">
-  <h1 align="center">📕 xiaohongshu-skill</h1>
+  <h1 align="center">📕 xiaohongshu</h1>
   <p align="center">AI-powered Xiaohongshu (小红书/RED) automation — publish, search, engage, and analyze.</p>
 </p>
 
 <p align="center">
+  <a href="#cli-quick-start">CLI Quick Start</a> •
   <a href="#features">Features</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#mcp-tools">MCP Tools</a> •
@@ -16,8 +17,38 @@
 ---
 
 <p align="center">
-  <img src="./demo.gif" alt="xiaohongshu-skill demo" width="800">
+  <img src="./demo.gif" alt="xiaohongshu demo" width="800">
 </p>
+
+## CLI Quick Start
+
+The fastest way to get started — **3 commands** from zero to posting:
+
+```bash
+# 1. Clone
+git clone https://github.com/Youhai020616/xiaohongshu.git
+cd xiaohongshu
+
+# 2. One-click install (auto: Python check → venv → pip install → MCP binary)
+bash setup.sh
+
+# 3. Initialize (auto: proxy config → start MCP → QR login)
+source activate.sh && xhs init
+```
+
+Then just use:
+
+```bash
+xhs search "AI创业"                                          # Search
+xhs publish -t "Hello" -c "My first post" -i photo.jpg      # Publish
+xhs like FEED_ID -t TOKEN                                    # Like
+xhs analytics                                                # Dashboard
+xhs --help                                                   # All commands
+```
+
+> 📖 Full CLI guide: [docs/cli-guide.md](docs/cli-guide.md)
+
+---
 
 ## What is this?
 
@@ -53,8 +84,8 @@ Built as an [OpenClaw](https://github.com/openclaw/openclaw) Skill, but works st
 ### 1. Clone
 
 ```bash
-git clone https://github.com/Youhai020616/xiaohongshu-skill.git
-cd xiaohongshu-skill
+git clone https://github.com/Youhai020616/xiaohongshu.git
+cd xiaohongshu
 ```
 
 ### 2. Start MCP Server
@@ -235,7 +266,7 @@ Install as an OpenClaw skill:
 
 ```bash
 # Copy to skills directory
-cp -r xiaohongshu-skill ~/.openclaw/skills/xiaohongshu
+cp -r xiaohongshu ~/.openclaw/skills/xiaohongshu
 
 # Start MCP server
 cd ~/.openclaw/skills/xiaohongshu/mcp
@@ -271,13 +302,33 @@ See [docs/claude-code-integration.md](docs/claude-code-integration.md) for setup
 ## Project Structure
 
 ```
-xiaohongshu-skill/
+xiaohongshu/
 ├── README.md                          # This file
 ├── SKILL.md                           # OpenClaw skill definition
+├── pyproject.toml                     # CLI package config (pip install -e .)
 ├── manifest.json                      # Skill metadata
 ├── LICENSE                            # MIT License
-├── requirements.txt                   # Python dependencies
+├── requirements.txt                   # Python dependencies (legacy)
 ├── .gitignore
+├── src/xhs_cli/                       # ⭐ CLI package
+│   ├── main.py                        # Unified entry point (xhs command)
+│   ├── engines/
+│   │   ├── mcp_client.py             # MCP JSON-RPC client (auto session)
+│   │   └── cdp_client.py             # CDP scripts wrapper
+│   ├── commands/
+│   │   ├── init.py                   # xhs init (guided setup)
+│   │   ├── auth.py                   # xhs login/logout/status
+│   │   ├── publish.py                # xhs publish (auto engine)
+│   │   ├── search.py                 # xhs search/detail
+│   │   ├── interact.py               # xhs like/comment/favorite
+│   │   ├── analytics.py              # xhs analytics/notifications
+│   │   ├── account.py                # xhs account management
+│   │   ├── profile.py                # xhs me/profile
+│   │   ├── server.py                 # xhs server start/stop/status
+│   │   └── config_cmd.py             # xhs config show/set/get
+│   └── utils/
+│       ├── config.py                  # ~/.xhs/config.json management
+│       └── output.py                  # Rich formatted output
 ├── mcp/
 │   ├── xiaohongshu-mcp-darwin-arm64   # MCP server binary
 │   ├── xiaohongshu-login-darwin-arm64 # Login helper binary
@@ -293,6 +344,7 @@ xiaohongshu-skill/
 ├── config/
 │   └── accounts.json.example          # Account config template
 └── docs/
+    ├── cli-guide.md                   # ⭐ CLI usage guide
     └── claude-code-integration.md     # Claude Code setup guide
 ```
 

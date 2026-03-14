@@ -1,4 +1,4 @@
-# 📕 xiaohongshu-skill
+# 📕 xiaohongshu
 
 > AI 驱动的小红书自动化工具 — 发布、搜索、互动、数据分析一站式搞定。
 
@@ -37,8 +37,8 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/Youhai020616/xiaohongshu-skill.git
-cd xiaohongshu-skill
+git clone https://github.com/Youhai020616/xiaohongshu.git
+cd xiaohongshu
 ```
 
 ### 2. 启动 MCP 服务

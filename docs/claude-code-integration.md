@@ -7,7 +7,7 @@
 将项目复制到 Claude Code 的 skills 目录：
 
 ```bash
-cp -r Post-to-xhs ~/.claude/skills/post-to-xhs
+cp -r xiaohongshu ~/.claude/skills/xiaohongshu
 ```
 
 ## 创建 SKILL.md
