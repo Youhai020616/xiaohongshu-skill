@@ -15,6 +15,10 @@
 
 ---
 
+<p align="center">
+  <img src="./demo.gif" alt="xiaohongshu-skill demo" width="800">
+</p>
+
 ## What is this?
 
 A complete toolkit for automating Xiaohongshu (小红书/RED Note) operations through two complementary engines:
