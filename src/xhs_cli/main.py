@@ -27,7 +27,6 @@ import click
 
 from xhs_cli import __version__
 
-
 BANNER = f"""
   ╔═══════════════════════════════╗
   ║   📕 xhs-cli v{__version__}        ║
@@ -76,15 +75,18 @@ def cli(ctx):
 
 # 发布
 from xhs_cli.commands.publish import publish  # noqa: E402
+
 cli.add_command(publish)
 
 # 搜索 & 详情
-from xhs_cli.commands.search import search, detail  # noqa: E402
+from xhs_cli.commands.search import detail, search  # noqa: E402
+
 cli.add_command(search)
 cli.add_command(detail)
 
 # 互动
-from xhs_cli.commands.interact import like, favorite, comment, reply, feeds  # noqa: E402
+from xhs_cli.commands.interact import comment, favorite, feeds, like, reply  # noqa: E402
+
 cli.add_command(like)
 cli.add_command(favorite)
 cli.add_command(comment)
@@ -93,34 +95,41 @@ cli.add_command(feeds)
 
 # 用户
 from xhs_cli.commands.profile import me, profile  # noqa: E402
+
 cli.add_command(me)
 cli.add_command(profile)
 
 # 数据分析
 from xhs_cli.commands.analytics import analytics, notifications  # noqa: E402
+
 cli.add_command(analytics)
 cli.add_command(notifications)
 
 # 初始化
 from xhs_cli.commands.init import init  # noqa: E402
+
 cli.add_command(init)
 
 # 认证
-from xhs_cli.commands.auth import login, logout, auth_status  # noqa: E402
+from xhs_cli.commands.auth import auth_status, login, logout  # noqa: E402
+
 cli.add_command(login)
 cli.add_command(logout)
 cli.add_command(auth_status, "status")
 
 # 服务管理
 from xhs_cli.commands.server import server_group  # noqa: E402
+
 cli.add_command(server_group, "server")
 
 # 账号管理
 from xhs_cli.commands.account import account_group  # noqa: E402
+
 cli.add_command(account_group, "account")
 
 # 配置管理
 from xhs_cli.commands.config_cmd import config_group  # noqa: E402
+
 cli.add_command(config_group, "config")
 
 

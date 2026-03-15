@@ -7,14 +7,17 @@ import json
 
 import click
 
-from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.engines.cdp_client import CDPClient, CDPError
+from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.utils import config
-from xhs_cli.utils.index_cache import save_index, resolve_id
 from xhs_cli.utils.export import export_data
+from xhs_cli.utils.index_cache import resolve_id, save_index
 from xhs_cli.utils.output import (
-    success, error, info, warning, console,
-    print_feeds, print_json, print_feed_detail,
+    error,
+    info,
+    print_feed_detail,
+    print_feeds,
+    print_json,
 )
 
 

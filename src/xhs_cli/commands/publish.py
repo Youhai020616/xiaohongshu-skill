@@ -4,12 +4,13 @@ xhs publish — 发布命令（自动选择最优引擎）。
 from __future__ import annotations
 
 import os
+
 import click
 
-from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.engines.cdp_client import CDPClient, CDPError
+from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.utils import config
-from xhs_cli.utils.output import success, error, info, warning, console
+from xhs_cli.utils.output import console, error, info, success, warning
 
 
 @click.command("publish", help="发布笔记到小红书")
@@ -32,7 +33,7 @@ def publish(title, content, content_file, images, video, tags, visibility, origi
 
     # 处理正文
     if content_file:
-        with open(content_file, "r", encoding="utf-8") as f:
+        with open(content_file, encoding="utf-8") as f:
             content = f.read().strip()
     if not content:
         error("正文不能为空，请使用 --content 或 --content-file")
@@ -105,7 +106,7 @@ def _publish_mcp(cfg, title, content, images, video, tags, visibility, original,
     info("正在通过 MCP 发布...")
     try:
         if video:
-            result = client.publish_video(
+            client.publish_video(
                 title=title,
                 content=content,
                 video=os.path.abspath(video),
@@ -114,7 +115,7 @@ def _publish_mcp(cfg, title, content, images, video, tags, visibility, original,
                 schedule_at=schedule,
             )
         else:
-            result = client.publish(
+            client.publish(
                 title=title,
                 content=content,
                 images=images,

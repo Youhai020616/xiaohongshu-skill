@@ -11,10 +11,9 @@ import signal
 import subprocess
 import sys
 import time
-from typing import Any, Optional
+from typing import Any
 
 import requests
-
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 18060
@@ -103,7 +102,7 @@ class MCPClient:
         self.host = host
         self.port = port
         self.base_url = f"http://{host}:{port}/mcp"
-        self.session_id: Optional[str] = None
+        self.session_id: str | None = None
         self._call_id = 0
         self._headers = {
             "Content-Type": "application/json",
@@ -312,7 +311,7 @@ class MCPClient:
             return False
 
     @staticmethod
-    def get_server_pid() -> Optional[int]:
+    def get_server_pid() -> int | None:
         """获取 MCP 服务进程 PID。"""
         pids = MCPClient._find_mcp_pids()
         return pids[0] if pids else None

@@ -6,7 +6,7 @@ from __future__ import annotations
 import click
 
 from xhs_cli.utils import config
-from xhs_cli.utils.output import success, error, info, console, print_json
+from xhs_cli.utils.output import console, error, info, print_json, success
 
 
 @click.group("config", help="配置管理")

@@ -7,9 +7,9 @@ import os
 
 import click
 
-from xhs_cli.engines.mcp_client import MCPClient, MCPError, MCP_BINARY, MCP_LOG_FILE
+from xhs_cli.engines.mcp_client import MCP_BINARY, MCP_LOG_FILE, MCPClient, MCPError
 from xhs_cli.utils import config
-from xhs_cli.utils.output import success, error, info, status, console
+from xhs_cli.utils.output import console, error, info, status, success
 
 
 @click.group("server", help="MCP 服务管理")
@@ -98,7 +98,7 @@ def log(lines):
         info("日志文件不存在")
         return
 
-    with open(MCP_LOG_FILE, "r") as f:
+    with open(MCP_LOG_FILE) as f:
         all_lines = f.readlines()
     for line in all_lines[-lines:]:
         console.print(line.rstrip())

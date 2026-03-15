@@ -9,7 +9,6 @@ import json
 import os
 import subprocess
 import sys
-from typing import Any, Optional
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 SCRIPTS_DIR = os.path.join(_PROJECT_ROOT, "scripts")

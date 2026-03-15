@@ -4,13 +4,12 @@ xhs account — 多账号管理命令。
 from __future__ import annotations
 
 import click
+from rich import box
+from rich.table import Table
 
 from xhs_cli.engines.cdp_client import CDPClient
 from xhs_cli.utils import config
-from xhs_cli.utils.output import success, error, info, console
-
-from rich.table import Table
-from rich import box
+from xhs_cli.utils.output import console, error, info, success
 
 
 @click.group("account", help="多账号管理")

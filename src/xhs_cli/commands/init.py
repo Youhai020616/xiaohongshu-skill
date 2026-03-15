@@ -6,17 +6,17 @@ xhs init — 新用户引导式初始化。
 from __future__ import annotations
 
 import os
-import sys
-import shutil
 import platform
+import shutil
+import sys
 
 import click
 from rich.panel import Panel
 from rich.text import Text
 
-from xhs_cli.engines.mcp_client import MCPClient, MCPError, MCP_BINARY
+from xhs_cli.engines.mcp_client import MCP_BINARY, MCPClient, MCPError
 from xhs_cli.utils import config
-from xhs_cli.utils.output import success, error, info, warning, console, status
+from xhs_cli.utils.output import console, error, info, status, success, warning
 
 
 @click.command("init", help="🚀 初始化设置 (新用户从这里开始)")

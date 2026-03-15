@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import click
 
-from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.engines.cdp_client import CDPClient, CDPError
+from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.utils import config
-from xhs_cli.utils.output import success, error, info, warning, status, console
+from xhs_cli.utils.output import console, error, info, status, success
 
 
 @click.command("login", help="登录小红书 (MCP 扫码)")
@@ -122,7 +122,7 @@ def auth_status():
     if mcp_running:
         try:
             client = MCPClient(host=cfg["mcp"]["host"], port=cfg["mcp"]["port"])
-            result = client.search("测试", {})
+            client.search("测试", {})
             status("MCP", "已登录", "green")
         except MCPError:
             status("MCP", "未登录", "yellow")

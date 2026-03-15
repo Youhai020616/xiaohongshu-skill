@@ -3,15 +3,17 @@ xhs me / profile — 用户信息命令。
 """
 from __future__ import annotations
 
-import json
-
 import click
 
 from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.utils import config
 from xhs_cli.utils.output import (
-    success, error, info, warning, console,
-    print_profile, print_json, status,
+    console,
+    error,
+    info,
+    print_json,
+    print_profile,
+    success,
 )
 
 

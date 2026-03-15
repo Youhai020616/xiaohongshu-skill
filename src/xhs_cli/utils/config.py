@@ -38,7 +38,7 @@ def load_config() -> dict[str, Any]:
     """加载配置文件，不存在则返回默认配置。"""
     if os.path.exists(CONFIG_FILE):
         try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            with open(CONFIG_FILE, encoding="utf-8") as f:
                 user_cfg = json.load(f)
             # Merge with defaults
             merged = _deep_merge(DEFAULT_CONFIG, user_cfg)

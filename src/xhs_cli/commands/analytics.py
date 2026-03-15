@@ -8,8 +8,12 @@ import click
 from xhs_cli.engines.cdp_client import CDPClient, CDPError
 from xhs_cli.utils import config
 from xhs_cli.utils.output import (
-    success, error, info, warning, console,
-    print_analytics, print_json,
+    console,
+    error,
+    info,
+    print_analytics,
+    print_json,
+    success,
 )
 
 
@@ -73,8 +77,8 @@ def notifications(wait, account, as_json):
 
 def _print_notifications(data: dict):
     """格式化输出通知。"""
-    from rich.table import Table
     from rich import box
+    from rich.table import Table
 
     mentions = data.get("mentions", data.get("data", []))
     if not mentions:

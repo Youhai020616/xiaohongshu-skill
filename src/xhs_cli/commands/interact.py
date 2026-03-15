@@ -7,8 +7,8 @@ import click
 
 from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.utils import config
-from xhs_cli.utils.index_cache import resolve_id, get_by_index
-from xhs_cli.utils.output import success, error, info, console
+from xhs_cli.utils.index_cache import get_by_index, resolve_id
+from xhs_cli.utils.output import error, info, success
 
 
 def _resolve_feed(feed_id_or_index: str, token: str = ""):
@@ -114,7 +114,6 @@ def feeds(as_json):
     """获取首页推荐 Feed。"""
     import json as json_mod
 
-    from xhs_cli.utils.index_cache import save_index
     from xhs_cli.utils.output import print_feeds, print_json
 
     client = _get_mcp()
