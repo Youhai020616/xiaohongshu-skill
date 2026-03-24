@@ -19,7 +19,6 @@ from xhs_cli.engines.mcp_binary import (
     MCP_DIR,
     get_binary_path,
     get_login_binary_path,
-    is_binary_available,
 )
 
 DEFAULT_HOST = "127.0.0.1"

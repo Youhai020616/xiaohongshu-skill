@@ -9,17 +9,17 @@ import os
 
 import click
 
+from xhs_cli.engines import docker_engine
 from xhs_cli.engines.mcp_binary import (
+    build_from_source,
     detect_platform,
+    download_binary,
     ensure_binary,
     get_installed_version,
     is_binary_available,
     is_go_available,
     is_source_available,
-    download_binary,
-    build_from_source,
 )
-from xhs_cli.engines import docker_engine
 from xhs_cli.engines.mcp_client import MCP_BINARY, MCP_LOG_FILE, MCPClient, MCPError
 from xhs_cli.utils import config
 from xhs_cli.utils.output import console, error, info, status, success, warning
@@ -69,7 +69,7 @@ def install(from_source, force):
     else:
         info("正在从 GitHub Releases 下载...")
         try:
-            from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, DownloadColumn
+            from rich.progress import BarColumn, DownloadColumn, Progress, SpinnerColumn, TextColumn
 
             with Progress(
                 SpinnerColumn(),
