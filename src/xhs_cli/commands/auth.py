@@ -133,7 +133,10 @@ def _login_cdp(account):
         output = client.login()
         if "LOGIN_READY" in output:
             success("登录页面已打开，请使用小红书 App 扫码")
-            info("扫码完成后，运行 [bold]xhs status[/] 确认登录状态")
+            console.print()
+            info("[bold yellow]注意:[/] CDP 登录仅覆盖 [bold]数据看板、通知[/] 功能")
+            info("搜索/发布/点赞/评论 等主要功能需要 MCP 登录:")
+            info("  扫码完成后，还需运行: [bold]xhs login[/]")
         else:
             console.print(output)
     except CDPError as e:
@@ -205,6 +208,7 @@ def auth_status():
     console.print()
 
     # MCP status
+    mcp_logged_in = False
     mcp_running = MCPClient.is_running(
         host=cfg["mcp"]["host"], port=cfg["mcp"]["port"]
     )
@@ -214,15 +218,17 @@ def auth_status():
             result = client.check_login()
             text = _extract_mcp_text(result)
             if "已登录" in text:
-                status("MCP", "已登录", "green")
+                mcp_logged_in = True
+                status("MCP", "已登录  ← 搜索/发布/点赞/评论/收藏", "green")
             else:
-                status("MCP", "未登录", "yellow")
+                status("MCP", "未登录  ← 搜索/发布/点赞/评论/收藏", "yellow")
         except MCPError:
-            status("MCP", "未登录", "yellow")
+            status("MCP", "未登录  ← 搜索/发布/点赞/评论/收藏", "yellow")
     else:
         status("MCP", "服务未运行", "red")
 
     # CDP status
+    cdp_logged_in = False
     try:
         cdp = CDPClient(
             host=cfg["cdp"]["host"],
@@ -230,9 +236,20 @@ def auth_status():
             headless=True,
             reuse_tab=True,
         )
-        logged_in = cdp.check_login()
-        status("CDP", "已登录" if logged_in else "未登录", "green" if logged_in else "yellow")
+        cdp_logged_in = cdp.check_login()
+        status("CDP", "已登录  ← 数据看板/通知" if cdp_logged_in else "未登录  ← 数据看板/通知",
+               "green" if cdp_logged_in else "yellow")
     except Exception:
-        status("CDP", "Chrome 未启动", "dim")
+        status("CDP", "Chrome 未启动  ← 数据看板/通知", "dim")
+
+    # 给出操作建议
+    console.print()
+    if not mcp_running:
+        info("启动服务: [bold]xhs server start[/]")
+        info("  然后登录: [bold]xhs login[/]")
+    elif not mcp_logged_in:
+        if cdp_logged_in:
+            info("[bold yellow]CDP 已登录，但主要功能需要 MCP 登录[/]")
+        info("MCP 登录: [bold]xhs login[/]")
 
     console.print()
