@@ -21,6 +21,7 @@ from typing import Optional
 CDP_PORT = 9222
 PROFILE_DIR_NAME = "XiaohongshuProfile"
 STARTUP_TIMEOUT = 15  # seconds to wait for Chrome to start
+MACOS_STARTUP_TIMEOUT = 25  # macOS first launch can be slow
 WSL_STARTUP_TIMEOUT = 45  # WSL needs more time
 
 
@@ -192,7 +193,12 @@ def launch_chrome(
     _chrome_process = proc
 
     # Wait for the debug port to become available
-    timeout = WSL_STARTUP_TIMEOUT if _is_wsl() else STARTUP_TIMEOUT
+    if _is_wsl():
+        timeout = WSL_STARTUP_TIMEOUT
+    elif sys.platform == "darwin":
+        timeout = MACOS_STARTUP_TIMEOUT
+    else:
+        timeout = STARTUP_TIMEOUT
     deadline = time.time() + timeout
     while time.time() < deadline:
         if is_port_open(port):

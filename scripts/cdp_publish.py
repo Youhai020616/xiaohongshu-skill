@@ -412,25 +412,36 @@ class XiaohongshuPublisher:
     # ------------------------------------------------------------------
 
     def _get_targets(self) -> list[dict]:
-        """Get list of available browser targets (tabs). Retries once on failure."""
+        """Get list of available browser targets (tabs).
+
+        Retries up to 3 times with increasing wait to handle slow Chrome
+        startup (common on macOS first launch and WSL).
+        """
         url = f"http://{self.host}:{self.port}/json"
-        for attempt in range(2):
+        max_attempts = 3
+        for attempt in range(max_attempts):
             try:
                 resp = requests.get(url, timeout=5)
                 resp.raise_for_status()
                 return resp.json()
             except Exception as e:
-                if attempt == 0:
+                if attempt < max_attempts - 1:
                     if _is_local_host(self.host):
-                        print(f"[cdp_publish] CDP connection failed ({e}), restarting Chrome...")
+                        print(
+                            f"[cdp_publish] CDP connection failed ({e}), "
+                            f"attempt {attempt + 1}/{max_attempts}, restarting Chrome..."
+                        )
                         from chrome_launcher import ensure_chrome
                         ensure_chrome(port=self.port)
                     else:
                         print(
-                            f"[cdp_publish] CDP connection failed ({e}), retrying remote endpoint "
+                            f"[cdp_publish] CDP connection failed ({e}), "
+                            f"attempt {attempt + 1}/{max_attempts}, retrying "
                             f"{self.host}:{self.port}..."
                         )
-                    self._sleep(2, minimum_seconds=1.0)
+                    # Increasing backoff: 2s, 4s
+                    wait = 2 + attempt * 2
+                    self._sleep(wait, minimum_seconds=float(wait))
                 else:
                     raise CDPError(f"Cannot reach Chrome on {self.host}:{self.port}: {e}")
 
@@ -633,6 +644,10 @@ class XiaohongshuPublisher:
 
         Login prompt modal keyword (default: "登录后推荐更懂你的笔记") indicates
         unauthenticated state for the xiaohongshu.com home/feed domain.
+
+        If not logged in on home, attempts SSO propagation from creator center
+        (the user may have logged in via ``xhs login --cdp`` which targets
+        creator.xiaohongshu.com).
         """
         scope = "home"
         cached_status = self._get_cached_login_status(scope)
@@ -641,33 +656,61 @@ class XiaohongshuPublisher:
                 print("[cdp_publish] Home login confirmed (cached).")
             return cached_status
 
+        if self._check_home_login_once(keyword, wait_seconds):
+            self._set_login_cache(scope, logged_in=True)
+            print("[cdp_publish] Home login confirmed.")
+            return True
+
+        # --- SSO propagation attempt ---
+        # xhs login --cdp logs into creator.xiaohongshu.com.
+        # The home domain (www.xiaohongshu.com) shares the .xiaohongshu.com
+        # cookie jar but may need a visit to the creator center first so
+        # the browser picks up the SSO session cookies.
+        print(
+            "[cdp_publish] Home login not detected. "
+            "Trying SSO propagation from creator center..."
+        )
+        self._navigate(XHS_CREATOR_LOGIN_CHECK_URL)
+        self._sleep(2, minimum_seconds=1.0)
+        creator_url = self._evaluate("window.location.href")
+        if isinstance(creator_url, str) and "login" not in creator_url.lower():
+            # Creator center IS logged in — navigate back to home to
+            # propagate the session.
+            print("[cdp_publish] Creator center is logged in, propagating to home...")
+            if self._check_home_login_once(keyword, wait_seconds):
+                self._set_login_cache(scope, logged_in=True)
+                print("[cdp_publish] Home login confirmed after SSO propagation.")
+                return True
+
+        # All attempts failed
+        self._set_login_cache(scope, logged_in=False)
+        print(
+            "\n[cdp_publish] NOT LOGGED IN (HOME).\n"
+            "  Please run: xhs login --cdp\n"
+            "  Then scan the QR code in the Chrome window.\n"
+        )
+        return False
+
+    def _check_home_login_once(
+        self,
+        keyword: str = XHS_HOME_LOGIN_MODAL_KEYWORD,
+        wait_seconds: float = 8.0,
+    ) -> bool:
+        """Navigate to home and return True if logged in (no login modal)."""
         self._navigate(XHS_HOME_URL)
         self._sleep(2, minimum_seconds=1.0)
 
         current_url = self._evaluate("window.location.href")
         print(f"[cdp_publish] Home URL: {current_url}")
         if isinstance(current_url, str) and "login" in current_url.lower():
-            self._set_login_cache(scope, logged_in=False)
-            print(
-                "\n[cdp_publish] NOT LOGGED IN (HOME).\n"
-                "  Please log in on xiaohongshu.com and run this command again.\n"
-            )
             return False
 
         deadline = time.time() + max(1.0, wait_seconds)
         while time.time() < deadline:
             if self._home_login_prompt_visible(keyword):
-                self._set_login_cache(scope, logged_in=False)
-                print(
-                    "\n[cdp_publish] NOT LOGGED IN (HOME).\n"
-                    f"  Detected login prompt keyword: {keyword}\n"
-                    "  Please log in on xiaohongshu.com and run this command again.\n"
-                )
                 return False
             self._sleep(0.7, minimum_seconds=0.2)
 
-        self._set_login_cache(scope, logged_in=True)
-        print("[cdp_publish] Home login confirmed.")
         return True
 
     def clear_cookies(self, domain: str = ".xiaohongshu.com"):
@@ -696,6 +739,8 @@ class XiaohongshuPublisher:
         Navigate to the Xiaohongshu login page for QR code scanning.
 
         Used for initial login or after clearing cookies for account switch.
+        Opens creator center login page; after scan, the SSO session cookie
+        (scoped to ``.xiaohongshu.com``) is shared with the main site.
         """
         self._navigate(XHS_CREATOR_LOGIN_CHECK_URL)
         self._sleep(2, minimum_seconds=1.0)
@@ -708,6 +753,8 @@ class XiaohongshuPublisher:
         print(
             "\n[cdp_publish] Login page is open.\n"
             "  Please scan the QR code in the Chrome window to log in.\n"
+            "  After scanning, the session covers both creator center\n"
+            "  and the main site (www.xiaohongshu.com).\n"
         )
 
     # ------------------------------------------------------------------
