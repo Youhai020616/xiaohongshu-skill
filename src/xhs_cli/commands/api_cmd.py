@@ -1,6 +1,7 @@
 """
 xhs api — REST API 服务管理命令。
 """
+
 from __future__ import annotations
 
 import click
@@ -23,7 +24,7 @@ def api_start(host, port, auto_reload):
     需要安装: pip install fastapi uvicorn
     """
     try:
-        import uvicorn
+        import uvicorn  # type: ignore[import-not-found]
     except ImportError:
         error("需要安装 uvicorn:")
         info("  pip install fastapi uvicorn")
