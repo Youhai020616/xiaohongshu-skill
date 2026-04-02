@@ -25,9 +25,19 @@ from typing import Optional
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
 ACCOUNTS_FILE = os.path.join(CONFIG_DIR, "accounts.json")
 
-# Base directory for account profiles
-PROFILES_BASE = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")),
-                              "Google", "Chrome", "XiaohongshuProfiles")
+# Base directory for account profiles — platform-aware
+def _default_profiles_base() -> str:
+    if sys.platform == "win32":
+        base = os.environ.get("LOCALAPPDATA", os.path.expanduser("~"))
+        return os.path.join(base, "Google", "Chrome", "XiaohongshuProfiles")
+    elif sys.platform == "darwin":
+        return os.path.join(os.path.expanduser("~"), "Library", "Application Support", "XiaohongshuProfiles")
+    else:
+        # Linux / WSL: follow XDG convention
+        xdg = os.environ.get("XDG_DATA_HOME", os.path.join(os.path.expanduser("~"), ".local", "share"))
+        return os.path.join(xdg, "xiaohongshu", "profiles")
+
+PROFILES_BASE = _default_profiles_base()
 
 # Default account name (for backward compatibility)
 DEFAULT_PROFILE_NAME = "default"

@@ -20,7 +20,9 @@ def _is_wsl() -> bool:
     try:
         if os.path.exists("/proc/version"):
             with open("/proc/version", "r") as f:
-                return "microsoft" in f.read().lower() or "wsl" in f.read().lower()
+                content = f.read().lower()
+                if "microsoft" in content or "wsl" in content:
+                    return True
     except Exception:
         pass
     return "WSL_DISTRO_NAME" in os.environ or "wsl" in platform.release().lower()

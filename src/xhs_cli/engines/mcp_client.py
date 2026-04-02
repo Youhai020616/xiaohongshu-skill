@@ -26,6 +26,20 @@ DEFAULT_PORT = 18060
 DEFAULT_PROXY = ""
 SESSION_TIMEOUT = 10  # seconds
 
+
+def _is_wsl_env() -> bool:
+    """Lightweight WSL detection for timeout adjustments."""
+    if "WSL_DISTRO_NAME" in os.environ:
+        return True
+    try:
+        if os.path.exists("/proc/version"):
+            with open("/proc/version", "r") as f:
+                content = f.read().lower()
+                return "microsoft" in content or "wsl" in content
+    except Exception:
+        pass
+    return False
+
 # 路径统一由 mcp_binary 模块管理
 MCP_LOG_FILE = os.path.join(MCP_DIR, "mcp.log")
 MCP_COOKIES_FILE = os.path.join(MCP_DIR, "cookies.json")
@@ -219,19 +233,25 @@ class MCPClient:
 
             subprocess.Popen(cmd, **popen_kwargs)
 
-        # Wait for startup
-        for _ in range(15):
+        # Wait for startup — WSL/低配环境需要更长时间
+        max_wait = 45 if _is_wsl_env() else 15
+        for _ in range(max_wait):
             time.sleep(1)
             if MCPClient.is_running(port=port):
                 return True
 
-        raise MCPError("MCP 服务启动超时")
+        wsl_hint = (
+            "\n  WSL 环境建议: 确保已安装 Chromium (sudo apt install chromium-browser)"
+            if _is_wsl_env() else ""
+        )
+        raise MCPError(f"MCP 服务启动超时 ({max_wait}s)。{wsl_hint}")
 
     @staticmethod
     def _find_mcp_pids() -> list[int]:
         """跨平台查找 MCP 进程 PID。"""
         pids = []
         binary_name = os.path.basename(MCP_BINARY)
+        my_pid = os.getpid()
         try:
             if sys.platform == "win32":
                 # Windows: wmic 查找精确的进程名
@@ -249,16 +269,28 @@ class MCPClient:
                     # CSV 格式: Node,ProcessId
                     pid_str = parts[-1].strip()
                     if pid_str.isdigit():
-                        pids.append(int(pid_str))
+                        pid = int(pid_str)
+                        if pid != my_pid:
+                            pids.append(pid)
             else:
-                # macOS / Linux: pgrep
+                # macOS / Linux: pgrep 精确匹配二进制名称
+                # 使用 -x 精确匹配进程名，避免匹配 Python 自身进程
                 result = subprocess.run(
-                    ["pgrep", "-f", binary_name],
+                    ["pgrep", "-x", binary_name],
                     capture_output=True, text=True,
                 )
-                for pid in result.stdout.strip().split("\n"):
-                    if pid.strip():
-                        pids.append(int(pid.strip()))
+                if result.returncode != 0:
+                    # -x 匹配失败时回退到 -f 但排除自身
+                    result = subprocess.run(
+                        ["pgrep", "-f", binary_name],
+                        capture_output=True, text=True,
+                    )
+                for pid_str in result.stdout.strip().split("\n"):
+                    pid_str = pid_str.strip()
+                    if pid_str.isdigit():
+                        pid = int(pid_str)
+                        if pid != my_pid:
+                            pids.append(pid)
         except Exception:
             pass
         return pids
@@ -276,7 +308,28 @@ class MCPClient:
                                    capture_output=True)
                 else:
                     os.kill(pid, signal.SIGTERM)
-            return True
+
+            # 等待进程实际退出（WSL 下清理可能较慢）
+            for _ in range(10):
+                time.sleep(0.5)
+                remaining = MCPClient._find_mcp_pids()
+                if not remaining:
+                    return True
+
+            # SIGTERM 未生效，强制 SIGKILL
+            remaining = MCPClient._find_mcp_pids()
+            for pid in remaining:
+                try:
+                    if sys.platform == "win32":
+                        subprocess.run(["taskkill", "/PID", str(pid), "/F"],
+                                       capture_output=True)
+                    else:
+                        os.kill(pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+
+            time.sleep(1)
+            return not MCPClient._find_mcp_pids()
         except Exception:
             return False
 

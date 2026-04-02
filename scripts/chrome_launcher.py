@@ -21,6 +21,20 @@ from typing import Optional
 CDP_PORT = 9222
 PROFILE_DIR_NAME = "XiaohongshuProfile"
 STARTUP_TIMEOUT = 15  # seconds to wait for Chrome to start
+WSL_STARTUP_TIMEOUT = 45  # WSL needs more time
+
+
+def _is_wsl() -> bool:
+    """Detect WSL environment."""
+    try:
+        if os.path.exists("/proc/version"):
+            with open("/proc/version", "r") as f:
+                content = f.read().lower()
+                if "microsoft" in content or "wsl" in content:
+                    return True
+    except Exception:
+        pass
+    return os.environ.get("WSL_DISTRO_NAME") is not None
 
 # Track the Chrome process we launched so we can kill it later
 _chrome_process: Optional[subprocess.Popen] = None
@@ -144,6 +158,15 @@ def launch_chrome(
         "--remote-allow-origins=*",
     ]
 
+    # WSL needs --no-sandbox (no user namespace support) and shared memory workaround
+    if _is_wsl() or os.environ.get("XHS_NO_SANDBOX"):
+        cmd.extend([
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+        ])
+        print("[chrome_launcher] WSL detected, added --no-sandbox --disable-dev-shm-usage")
+
     if headless:
         cmd.append("--headless=new")
 
@@ -162,7 +185,8 @@ def launch_chrome(
     _chrome_process = proc
 
     # Wait for the debug port to become available
-    deadline = time.time() + STARTUP_TIMEOUT
+    timeout = WSL_STARTUP_TIMEOUT if _is_wsl() else STARTUP_TIMEOUT
+    deadline = time.time() + timeout
     while time.time() < deadline:
         if is_port_open(port):
             print(f"[chrome_launcher] Chrome is ready on port {port}.")
