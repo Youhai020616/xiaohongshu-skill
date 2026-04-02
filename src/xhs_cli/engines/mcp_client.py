@@ -33,7 +33,7 @@ def _is_wsl_env() -> bool:
         return True
     try:
         if os.path.exists("/proc/version"):
-            with open("/proc/version", "r") as f:
+            with open("/proc/version") as f:
                 content = f.read().lower()
                 return "microsoft" in content or "wsl" in content
     except Exception:

@@ -19,7 +19,7 @@ def _is_wsl() -> bool:
     """Detect WSL environment."""
     try:
         if os.path.exists("/proc/version"):
-            with open("/proc/version", "r") as f:
+            with open("/proc/version") as f:
                 content = f.read().lower()
                 if "microsoft" in content or "wsl" in content:
                     return True
@@ -93,14 +93,13 @@ def _login_mcp():
     if is_wsl:
         warning("WSL 环境检测，浏览器启动可能较慢，已自动延长超时时间")
 
-    last_error = None
     for attempt in range(1, max_retries + 1):
         timeout = base_timeout + (attempt - 1) * 120  # 每次重试增加 2 分钟
         if attempt > 1:
             info(f"第 {attempt}/{max_retries} 次尝试（超时 {timeout}s）...")
             time.sleep(3)  # 重试前短暂等待
         else:
-            info(f"正在获取登录二维码（浏览器启动可能较慢，请耐心等待）...")
+            info("正在获取登录二维码（浏览器启动可能较慢，请耐心等待）...")
 
         try:
             result = client.get_qrcode(timeout=timeout)
@@ -125,7 +124,6 @@ def _login_mcp():
                 console.print(str(result))
             return  # 成功，退出
         except MCPError as e:
-            last_error = e
             err_msg = str(e)
             is_timeout = "timed out" in err_msg.lower() or "timeout" in err_msg.lower()
 
