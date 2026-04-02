@@ -3,12 +3,27 @@ xhs login / logout / status — 认证命令。
 """
 from __future__ import annotations
 
+import os
+import platform
+import time
+
 import click
 
 from xhs_cli.engines.cdp_client import CDPClient, CDPError
 from xhs_cli.engines.mcp_client import MCPClient, MCPError
 from xhs_cli.utils import config
-from xhs_cli.utils.output import console, error, info, status, success
+from xhs_cli.utils.output import console, error, info, status, success, warning
+
+
+def _is_wsl() -> bool:
+    """Detect WSL environment."""
+    try:
+        if os.path.exists("/proc/version"):
+            with open("/proc/version", "r") as f:
+                return "microsoft" in f.read().lower() or "wsl" in f.read().lower()
+    except Exception:
+        pass
+    return "WSL_DISTRO_NAME" in os.environ or "wsl" in platform.release().lower()
 
 
 @click.command("login", help="登录小红书 (MCP 扫码)")
@@ -68,39 +83,72 @@ def _login_mcp():
     except MCPError:
         pass
 
-    info("正在获取登录二维码（浏览器启动可能较慢，请耐心等待）...")
-    try:
-        result = client.get_qrcode(timeout=300)
-        console.print()
-        success("二维码已生成，请使用小红书 App 扫码登录")
-        info("打开小红书 App → 左上角扫一扫 → 扫描二维码")
-        console.print()
+    # WSL/低配环境检测 — 调整超时和重试策略
+    is_wsl = _is_wsl()
+    max_retries = 3 if is_wsl else 2
+    base_timeout = 600 if is_wsl else 300  # WSL 给 10 分钟
 
-        # 显示二维码数据（如果有 base64 图片数据）
-        if isinstance(result, dict):
-            content = result.get("content", [])
-            if isinstance(content, list):
-                for item in content:
-                    if isinstance(item, dict) and item.get("type") == "text":
-                        console.print(item.get("text", ""))
-                    elif isinstance(item, dict) and item.get("type") == "image":
-                        info("二维码图片已生成（在支持的终端中查看）")
-                        url = item.get("url", "")
-                        if url:
-                            console.print(f"  [dim]{url[:80]}...[/]")
+    if is_wsl:
+        warning("WSL 环境检测，浏览器启动可能较慢，已自动延长超时时间")
+
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        timeout = base_timeout + (attempt - 1) * 120  # 每次重试增加 2 分钟
+        if attempt > 1:
+            info(f"第 {attempt}/{max_retries} 次尝试（超时 {timeout}s）...")
+            time.sleep(3)  # 重试前短暂等待
         else:
-            console.print(str(result))
-    except MCPError as e:
-        err_msg = str(e)
-        if "timed out" in err_msg.lower() or "timeout" in err_msg.lower():
-            error("获取二维码超时")
-            info("可能原因: 浏览器启动较慢（WSL/低配机器常见）")
-            info("如果二维码已弹出，请先扫码登录，然后运行: [bold]xhs status[/] 检查")
-            info("否则请重试: [bold]xhs login[/]")
-        else:
-            error(f"获取二维码失败: {e}")
-            info("请检查 MCP 服务状态: [bold]xhs server status[/]")
-        raise SystemExit(1)
+            info(f"正在获取登录二维码（浏览器启动可能较慢，请耐心等待）...")
+
+        try:
+            result = client.get_qrcode(timeout=timeout)
+            console.print()
+            success("二维码已生成，请使用小红书 App 扫码登录")
+            info("打开小红书 App → 左上角扫一扫 → 扫描二维码")
+            console.print()
+
+            # 显示二维码数据（如果有 base64 图片数据）
+            if isinstance(result, dict):
+                content = result.get("content", [])
+                if isinstance(content, list):
+                    for item in content:
+                        if isinstance(item, dict) and item.get("type") == "text":
+                            console.print(item.get("text", ""))
+                        elif isinstance(item, dict) and item.get("type") == "image":
+                            info("二维码图片已生成（在支持的终端中查看）")
+                            url = item.get("url", "")
+                            if url:
+                                console.print(f"  [dim]{url[:80]}...[/]")
+            else:
+                console.print(str(result))
+            return  # 成功，退出
+        except MCPError as e:
+            last_error = e
+            err_msg = str(e)
+            is_timeout = "timed out" in err_msg.lower() or "timeout" in err_msg.lower()
+
+            if is_timeout and attempt < max_retries:
+                warning(f"获取二维码超时，正在重试... ({attempt}/{max_retries})")
+                continue  # 自动重试
+            elif is_timeout:
+                error("获取二维码超时")
+                info("可能原因: 浏览器启动较慢（WSL/低配机器常见）")
+                if is_wsl:
+                    console.print()
+                    info("[bold yellow]WSL 用户建议:[/]")
+                    info("  1. 确保已安装 Chromium: [bold]sudo apt install chromium-browser[/]")
+                    info("  2. 或安装 Chrome: [bold]sudo apt install google-chrome-stable[/]")
+                    info("  3. 设置浏览器路径: [bold]export ROD_BROWSER_BIN=$(which chromium-browser)[/]")
+                    info("  4. 重启 MCP 服务后重试: [bold]xhs server restart && xhs login[/]")
+                else:
+                    info("如果二维码已弹出，请先扫码登录，然后运行: [bold]xhs status[/] 检查")
+                    info("否则请重试: [bold]xhs login[/]")
+            else:
+                error(f"获取二维码失败: {e}")
+                info("请检查 MCP 服务状态: [bold]xhs server status[/]")
+            break
+
+    raise SystemExit(1)
 
 
 def _extract_mcp_text(result) -> str:
