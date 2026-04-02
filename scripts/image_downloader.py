@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Media downloader for Xiaohongshu publishing.
 
@@ -7,11 +8,11 @@ and cleans up after publishing is complete.
 """
 
 import os
+import shutil
 import sys
 import tempfile
-import shutil
 import uuid
-from urllib.parse import urlparse, unquote
+from urllib.parse import unquote, urlparse
 
 import requests
 

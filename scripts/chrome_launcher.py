@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Chrome launcher with CDP remote debugging support.
 
@@ -12,11 +13,10 @@ Manages a dedicated Chrome instance for Xiaohongshu publishing:
 """
 
 import os
-import sys
-import time
 import socket
 import subprocess
-from typing import Optional
+import sys
+import time
 
 CDP_PORT = 9222
 PROFILE_DIR_NAME = "XiaohongshuProfile"
@@ -29,7 +29,7 @@ def _is_wsl() -> bool:
     """Detect WSL environment."""
     try:
         if os.path.exists("/proc/version"):
-            with open("/proc/version", "r") as f:
+            with open("/proc/version") as f:
                 content = f.read().lower()
                 if "microsoft" in content or "wsl" in content:
                     return True
@@ -38,9 +38,9 @@ def _is_wsl() -> bool:
     return os.environ.get("WSL_DISTRO_NAME") is not None
 
 # Track the Chrome process we launched so we can kill it later
-_chrome_process: Optional[subprocess.Popen] = None
+_chrome_process: subprocess.Popen | None = None
 # Track the current account being used
-_current_account: Optional[str] = None
+_current_account: str | None = None
 
 
 def get_chrome_path() -> str:
@@ -92,7 +92,7 @@ def get_chrome_path() -> str:
     )
 
 
-def get_user_data_dir(account: Optional[str] = None) -> str:
+def get_user_data_dir(account: str | None = None) -> str:
     """
     Return the Chrome profile directory path for a given account.
 
@@ -127,14 +127,14 @@ def is_port_open(port: int, host: str = "127.0.0.1") -> bool:
         try:
             s.connect((host, port))
             return True
-        except (ConnectionRefusedError, socket.timeout, OSError):
+        except (TimeoutError, ConnectionRefusedError, OSError):
             return False
 
 
 def launch_chrome(
     port: int = CDP_PORT,
     headless: bool = False,
-    account: Optional[str] = None,
+    account: str | None = None,
 ) -> subprocess.Popen | None:
     """
     Launch Chrome with remote debugging enabled.
@@ -294,7 +294,7 @@ def kill_chrome(port: int = CDP_PORT):
 def restart_chrome(
     port: int = CDP_PORT,
     headless: bool = False,
-    account: Optional[str] = None,
+    account: str | None = None,
 ) -> subprocess.Popen | None:
     """
     Kill the current Chrome instance and relaunch with the specified mode.
@@ -320,7 +320,7 @@ def restart_chrome(
 def ensure_chrome(
     port: int = CDP_PORT,
     headless: bool = False,
-    account: Optional[str] = None,
+    account: str | None = None,
 ) -> bool:
     """
     Ensure Chrome is running with remote debugging on the given port.
@@ -343,7 +343,7 @@ def ensure_chrome(
         return False
 
 
-def get_current_account() -> Optional[str]:
+def get_current_account() -> str | None:
     """Get the name of the currently active account."""
     return _current_account
 

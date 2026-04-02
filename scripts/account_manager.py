@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """
 Multi-account manager for Xiaohongshu publishing.
 
@@ -17,9 +18,8 @@ Usage:
 
 import json
 import os
-import sys
 import shutil
-from typing import Optional
+import sys
 
 # Config file location
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config")
@@ -53,9 +53,9 @@ def _load_accounts() -> dict:
     _ensure_config_dir()
     if os.path.exists(ACCOUNTS_FILE):
         try:
-            with open(ACCOUNTS_FILE, "r", encoding="utf-8") as f:
+            with open(ACCOUNTS_FILE, encoding="utf-8") as f:
                 return json.load(f)
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             pass
     # Default structure
     return {
@@ -77,7 +77,7 @@ def _save_accounts(data: dict):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def get_profile_dir(account_name: Optional[str] = None) -> str:
+def get_profile_dir(account_name: str | None = None) -> str:
     """
     Get the Chrome profile directory for a given account.
 
@@ -146,7 +146,7 @@ def list_accounts() -> list[dict]:
     return result
 
 
-def add_account(name: str, alias: Optional[str] = None) -> bool:
+def add_account(name: str, alias: str | None = None) -> bool:
     """
     Add a new account.
 
@@ -210,7 +210,7 @@ def remove_account(name: str, delete_profile: bool = False) -> bool:
     return True
 
 
-def get_account_info(name: str) -> Optional[dict]:
+def get_account_info(name: str) -> dict | None:
     """Get info for a specific account."""
     data = _load_accounts()
     if name not in data["accounts"]:

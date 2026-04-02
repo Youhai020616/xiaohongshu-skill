@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlencode
-
 
 SEARCH_BASE_URL = "https://www.xiaohongshu.com/search_result"
 FEED_DETAIL_URL_TEMPLATE = (

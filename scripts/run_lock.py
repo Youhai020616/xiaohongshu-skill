@@ -37,7 +37,7 @@ def _pid_running(pid: int) -> bool:
 
 def _read_lock_data(path: str) -> dict[str, Any]:
     try:
-        with open(path, "r", encoding="utf-8") as file_handle:
+        with open(path, encoding="utf-8") as file_handle:
             data = json.load(file_handle)
             if isinstance(data, dict):
                 return data

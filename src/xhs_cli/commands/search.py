@@ -86,9 +86,7 @@ def _search_mcp(cfg, keyword, sort, note_type, pub_time, scope, location, as_jso
             filters["search_scope"] = scope
         if location:
             filters["location"] = location
-        # 将 limit 加入 filters，由 MCP 服务端控制返回数量
-        if limit:
-            filters["limit"] = limit
+        # limit 不传给 MCP 服务端（Go 端 schema 不支持），仅在客户端做结果切片
         result = client.search(keyword, filters=filters or None)
     except MCPError as e:
         error(f"搜索失败: {e}")
